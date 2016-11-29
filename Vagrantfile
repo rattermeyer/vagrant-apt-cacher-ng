@@ -13,16 +13,11 @@ Vagrant.configure(2) do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "ubuntu/trusty64"
-  #if Vagrant.has_plugin?("vagrant-cachier")
-  #  # Configure cached packages to be shared between instances of the same base box.
-  #  # More info on http://fgrehm.viewdocs.io/vagrant-cachier/usage
-  #  config.cache.scope = :machine
-  #end
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
-  # config.vm.box_check_update = false
+  config.vm.box_check_update = false
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -52,8 +47,9 @@ Vagrant.configure(2) do |config|
   #   vb.gui = true
   #
   #   # Customize the amount of memory on the VM:
-    vb.memory = "2048"
-    vb.cpus = 1
+    vb.memory = "4096"
+    vb.cpus = 4
+    vb.name = "proxy-cache"
   end
   #
   # View the documentation for the provider you are using for more
@@ -66,10 +62,15 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
-  config.vm.define "apt-cacher-ng" do |cc|
-    cc.vm.network "private_network", ip: "192.168.33.254" 	  
+  config.vm.define "proxy-cache" do |cc|
+    cc.vm.hostname = "proxy-cache"
     cc.vm.network "forwarded_port", guest: 3142, host: 3142
     cc.vm.network "forwarded_port", guest: 3128, host: 3128
-	cc.vm.provision "shell", inline: "sed -i 's/us\\./de\./g' /etc/apt/sources.list && apt-get update && apt-get upgrade -y && apt-get install -y apt-cacher-ng squid"
+	  cc.vm.provision "shell", inline: "sed -i 's,http://us.archive.ubuntu.com/ubuntu/,mirror://mirrors.ubuntu.com/mirrors.txt,g' /etc/apt/sources.list && apt-get update && apt-get upgrade -y"
+    cc.vm.provision "shell", path: "scripts/ansible.sh"
+    cc.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/cache.yml"
+      ansible.sudo = true
+    end
   end
 end

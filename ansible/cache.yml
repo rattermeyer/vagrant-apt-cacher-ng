@@ -1,0 +1,5 @@
+---
+- hosts: proxy-cache
+  roles:
+    - kbrebanov.squid
+    - elnappoo.apt-cacher-ng

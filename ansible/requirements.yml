@@ -1,0 +1,4 @@
+- src: elnappoo.apt-cacher-ng
+  version: v1.0.3
+- src: kbrebanov.squid
+  version: v3.1.0
